@@ -1,0 +1,89 @@
+-------------------------------------------------------------------------------
+- README                                                                      -
+-------------------------------------------------------------------------------
+
+Description:
+------------
+
+This program aims to catch crashes from OSX applications and print debugging 
+information such as registers, disassembled code and a memory dump of the
+stack.
+
+It works on both x86 and x86_64 architectures and uses BeaEngine to disassemble
+code (http://www.beaengine.org/download/beaengine-sources.zip).
+
+Usage:
+------
+
+$ ./crash 
+Usage: crash [options] target arguments
+  -t seconds        timeout (default: 5).
+
+Using BeaEngine version 4.1-175.
+
+Example of usage:
+-----------------
+
+# Define the amount of time the target program is allowed to live.
+$ sudo ./crash -t 2 /usr/local/bin/dummy64 
+[+] PID: 31273. Executing: /usr/local/bin/dummy64 
+PID: 31273 (0x7a29)
+[+] Timeout exceeded, exiting.
+$
+
+# Catching a crash from a 64 bits application.
+$ sudo ./crash -t 2 /usr/local/bin/dummy64 1 0
+[+] PID: 31282. Executing: /usr/local/bin/dummy64 1 0 
+[+] Exception: unknown exception code 0xd.
+----------------------------------------------------------------------------------------------
+[ RAX: 4141414141414141  RBX: 0000000000000000  RCX: 4242424242424242  RDX: ffffffffffffffff ]
+[ RSI: 0000000000000000  RDI: 000000000000003c  RBP: 00007fff52359ef0  RSP: 00007fff52359eb0 ]
+[ R08: 0000000000000000  R09: 0000000000000000  R10: 0000000000000001  R11: 00007fff76360250 ]
+[ R12: 0000000000000000  R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000 ]
+[     CS: 002b      FS: 0000      GS: 0000      RIP: 000000010d8a6ed4    o d I t s Z a p C   ]
+
+000000010d8a6ed4: mov        qword [rax], rcx
+000000010d8a6ed7: mov         [rbp-0x18], 0x00000000
+000000010d8a6ede: mov        eax,  [rbp-0x18]
+000000010d8a6ee1: mov         [rbp-0x14], eax
+000000010d8a6ee4: mov        eax,  [rbp-0x14]
+000000010d8a6ee7: add        rsp, 0x40
+
+Stack:
+00007fff52359eb0: 00007fff52359f38  8.5R....
+00007fff52359eb0: 0000000000000000  ........
+00007fff52359eb0: 0000000000000000  ........
+00007fff52359eb0: 4141414141414141  AAAAAAAA
+00007fff52359eb0: 0000000000000001  ........
+00007fff52359eb0: 0000000000000000  ........
+00007fff52359eb0: 00007fff52359f10  ..5R....
+00007fff52359eb0: 000000036d4a705e  ^pJm....
+----------------------------------------------------------------------------------------------
+
+# Catching a crash from a 32 bits application.
+$ sudo ./crash -t 2 /usr/local/bin/dummy32 1 0
+[+] PID: 31285. Executing: /usr/local/bin/dummy32 1 0 
+[+] Exception: KERN_INVALID_ADDRESS.
+--------------------------------------------------------------
+[ EAX: 00000000  EBX: bff6df54  ECX: bff6de4c  EDX: 99ce68e6 ]
+[ ESI: 00000000  EDI: 00000000  EBP: bff6df08  ESP: bff6ded0 ]
+[ ES: 0023  CS: 001b  SS: 0023  DS: 0023  FS: 0000  GS: 000f ]
+[ EIP: 00093f23                            o d I t S Z a P C ]
+
+00093f23: mov         [0x41414141], 0x42424242
+00093f2d: mov         [ebp-0x10], 0x00000000
+00093f34: mov        eax,  [ebp-0x10]
+00093f37: mov         [ebp-0x0C], eax
+00093f3a: mov        eax,  [ebp-0x0C]
+00093f3d: add        esp, 0x38
+
+Stack:
+bff6ded0: 00000000  ....
+bff6ded0: 0000000a  ....
+bff6ded0: 8fe925ec  .%..
+bff6ded0: 00093e5b  [>..
+bff6ded0: 00000001  ....
+bff6ded0: bff6df50  P...
+bff6ded0: bff6df40  @...
+bff6ded0: bff6df38  8...
+--------------------------------------------------------------
